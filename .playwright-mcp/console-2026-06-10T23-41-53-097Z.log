@@ -1,0 +1,2 @@
+[ 7615360ms] [ERROR] Access to fetch at 'https://server-delta-ebon.vercel.app/api/products' from origin 'http://127.0.0.1:53822' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource. @ http://127.0.0.1:53822/:0
+[ 7615379ms] [ERROR] Failed to load resource: net::ERR_FAILED @ https://server-delta-ebon.vercel.app/api/products:0
