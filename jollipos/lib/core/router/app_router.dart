@@ -8,6 +8,7 @@ import '../../presentation/features/checkout/checkout_screen.dart';
 import '../../presentation/features/receipt/receipt_screen.dart';
 import '../../presentation/features/orders/kds_screen.dart';
 import '../../presentation/features/admin/admin_screen.dart';
+import '../../presentation/features/admin/menu_management_screen.dart';
 import '../../presentation/features/auth/login_screen.dart';
 import '../../domain/entities/order.dart';
 
@@ -19,6 +20,7 @@ abstract class Routes {
   static const receipt = '/receipt';
   static const kds = '/kds';
   static const admin = '/admin';
+  static const menuManagement = '/admin/menu';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -38,6 +40,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: Routes.receipt,
         builder: (context, state) =>
             ReceiptScreen(order: state.extra! as Order),
+      ),
+      GoRoute(
+        path: Routes.menuManagement,
+        builder: (_, __) => const MenuManagementScreen(),
       ),
       // Shell hosts the persistent navigation rail (tablet) / bottom bar (phone).
       ShellRoute(

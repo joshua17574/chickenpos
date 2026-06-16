@@ -10,10 +10,15 @@ import 'data/local/seed_data.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Bootstrap: shared prefs + Drift DB (seeded on first run).
+  // Bootstrap: shared prefs + Drift DB.
   final prefs = await SharedPreferences.getInstance();
   final db = AppDatabase();
-  await SeedData.seedIfEmpty(db);
+
+  // IMPORTANT — NO HARDCODED MENU.
+  // We only ensure the default staff accounts exist so the manager can log in
+  // and start encoding their own catalog. The product catalog starts EMPTY.
+  // A sample menu can be loaded on demand from Menu Management > Tools.
+  await SeedData.ensureDefaultUsers(db);
 
   runApp(
     ProviderScope(

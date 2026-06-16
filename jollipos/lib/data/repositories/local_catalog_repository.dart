@@ -23,11 +23,19 @@ class LocalCatalogRepository implements CatalogRepository {
   Future<List<Product>> getProducts() => _dao.getProducts();
 
   @override
+  Stream<List<ModifierGroup>> watchModifierGroups() =>
+      _dao.watchModifierGroups();
+
+  @override
   Future<List<ModifierGroup>> getModifierGroups() => _dao.getModifierGroups();
 
   @override
   Future<void> upsertCategory(Category category) =>
       _dao.upsertCategory(category);
+
+  @override
+  Future<void> deleteCategory(String categoryId) =>
+      _dao.deleteCategory(categoryId);
 
   @override
   Future<void> upsertProduct(Product product) => _dao.upsertProduct(product);
@@ -39,4 +47,15 @@ class LocalCatalogRepository implements CatalogRepository {
   @override
   Future<void> deleteProduct(String productId) =>
       _dao.deleteProduct(productId);
+
+  @override
+  Future<void> upsertModifierGroup(ModifierGroup group) =>
+      _dao.upsertModifierGroup(group);
+
+  @override
+  Future<void> deleteModifierGroup(String groupId) =>
+      _dao.deleteModifierGroup(groupId);
+
+  @override
+  Future<void> clearCatalog() => _dao.clearCatalog();
 }

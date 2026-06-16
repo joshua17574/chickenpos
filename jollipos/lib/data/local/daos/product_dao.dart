@@ -37,6 +37,13 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
         iconName: Value(c.iconName),
       ));
 
+  /// Deletes a category and all of its products atomically so the ordering
+  /// screen never shows products pointing at a missing category.
+  Future<void> deleteCategory(String id) => transaction(() async {
+        await (delete(products)..where((p) => p.categoryId.equals(id))).go();
+        await (delete(categories)..where((c) => c.id.equals(id))).go();
+      });
+
   // ---------------- Products ----------------
   Stream<List<Product>> watchProducts() =>
       (select(products)..orderBy([(p) => OrderingTerm(expression: p.sortOrder)]))
@@ -116,6 +123,32 @@ class ProductDao extends DatabaseAccessor<AppDatabase> with _$ProductDaoMixin {
       ));
     }
   }
+
+  /// Live modifier groups (with their options) for Menu Management.
+  ///
+  /// Re-queries whenever the [modifierGroups] table changes. Every edit path
+  /// ([upsertModifierGroup], [deleteModifierGroup]) writes the group row, so a
+  /// single watch on that table is sufficient to keep the UI in sync.
+  Stream<List<ModifierGroup>> watchModifierGroups() async* {
+    await for (final _ in select(modifierGroups).watch()) {
+      yield await getModifierGroups();
+    }
+  }
+
+  /// Deletes a modifier group and its options atomically.
+  Future<void> deleteModifierGroup(String id) => transaction(() async {
+        await (delete(modifiers)..where((m) => m.groupId.equals(id))).go();
+        await (delete(modifierGroups)..where((g) => g.id.equals(id))).go();
+      });
+
+  /// Wipes the entire user-encoded catalog (products, modifiers, modifier
+  /// groups, categories) in one atomic transaction. Orders + users untouched.
+  Future<void> clearCatalog() => transaction(() async {
+        await delete(products).go();
+        await delete(modifiers).go();
+        await delete(modifierGroups).go();
+        await delete(categories).go();
+      });
 
   // ---------------- Mappers ----------------
   Category _toCategory(CategoryRow r) => Category(

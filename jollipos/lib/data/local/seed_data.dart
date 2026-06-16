@@ -7,9 +7,18 @@ import '../../domain/entities/product.dart';
 import '../../domain/entities/user.dart';
 import 'database.dart';
 
-/// First-run seed: categories, modifier groups, ~26 menu items, default users.
-/// Prices are in centavos (₱1.00 = 100).
+/// Seed helpers.
+///
+/// CRITICAL PRINCIPLE — the product catalog is NOT hardcoded into the app.
+/// [ensureDefaultUsers] is the only thing run automatically on first launch so
+/// a manager can log in. The catalog ([loadSampleMenu]) is OPTIONAL and only
+/// runs when the user taps "Load Sample Menu" in Menu Management > Tools, and
+/// can be wiped any time with [clearMenu]. The ordering screen always reads
+/// live from whatever the user has encoded in the database.
+///
+/// All prices are in centavos (₱1.00 = 100).
 abstract class SeedData {
+  // Sample category ids (used only by the optional sample menu).
   static const catChicken = 'cat_chicken';
   static const catBurgers = 'cat_burgers';
   static const catPasta = 'cat_pasta';
@@ -23,6 +32,40 @@ abstract class SeedData {
   static const grpDrink = 'grp_drink';
   static const grpSpice = 'grp_spice';
   static const grpRice = 'grp_rice';
+
+  // ---------------------------------------------------------------------------
+  // Default staff accounts — required so the app is usable on first launch.
+  // ---------------------------------------------------------------------------
+
+  static List<User> users() => [
+        User(
+          id: 'u_admin',
+          name: 'Store Manager',
+          role: UserRole.admin,
+          pinHash: PinHasher.hash(AppConstants.defaultAdminPin),
+        ),
+        User(
+          id: 'u_cashier',
+          name: 'Cashier 1',
+          role: UserRole.cashier,
+          pinHash: PinHasher.hash('0000'),
+        ),
+      ];
+
+  /// Idempotent: seeds the default staff accounts only when no users exist.
+  /// Does NOT touch the product catalog.
+  static Future<void> ensureDefaultUsers(AppDatabase db) async {
+    final existing = await db.userDao.getUsers();
+    if (existing.isNotEmpty) return;
+    for (final u in users()) {
+      await db.userDao.upsertUser(u);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // OPTIONAL sample menu — purely a demo convenience. Never required, never
+  // referenced by ordering logic. Safe to delete this whole section in prod.
+  // ---------------------------------------------------------------------------
 
   static List<Category> categories() => const [
         Category(id: catChicken, name: 'Fried Chicken', sortOrder: 0, iconName: 'drumstick'),
@@ -120,36 +163,20 @@ abstract class SeedData {
         Product(id: 'p_combo_family', categoryId: catCombos, name: 'Family Feast', basePriceCentavos: 59900, description: '6-pc chicken, family spaghetti, 4 drinks.', isCombo: true, sortOrder: 2, modifierGroupIds: [grpSpice]),
       ];
 
-  static List<User> users() => [
-        User(
-          id: 'u_admin',
-          name: 'Store Manager',
-          role: UserRole.admin,
-          pinHash: PinHasher.hash(AppConstants.defaultAdminPin),
-        ),
-        User(
-          id: 'u_cashier',
-          name: 'Cashier 1',
-          role: UserRole.cashier,
-          pinHash: PinHasher.hash('0000'),
-        ),
-      ];
-
-  /// Idempotent: seeds only when the catalog is empty.
-  static Future<void> seedIfEmpty(AppDatabase db) async {
-    final existing = await db.productDao.getCategories();
-    if (existing.isNotEmpty) return;
-    for (final c in categories()) {
-      await db.productDao.upsertCategory(c);
-    }
+  /// Loads the optional demo catalog. Safe to call repeatedly (upserts).
+  static Future<void> loadSampleMenu(AppDatabase db) async {
     for (final g in modifierGroups()) {
       await db.productDao.upsertModifierGroup(g);
+    }
+    for (final c in categories()) {
+      await db.productDao.upsertCategory(c);
     }
     for (final p in products()) {
       await db.productDao.upsertProduct(p);
     }
-    for (final u in users()) {
-      await db.userDao.upsertUser(u);
-    }
   }
+
+  /// Wipes the entire user catalog (products, modifiers, categories). Staff
+  /// accounts and past orders are left untouched.
+  static Future<void> clearMenu(AppDatabase db) => db.productDao.clearCatalog();
 }

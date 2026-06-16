@@ -33,6 +33,9 @@ dependencies:
   # Receipt / thermal printer (abstracted; stubbed when no hardware)
   esc_pos_utils_plus: ^2.0.4
 
+  # Product photos — camera/gallery, stored as local file path on the product
+  image_picker: ^1.1.2
+
   # Utilities
   intl: ^0.19.0
   uuid: ^4.5.1
