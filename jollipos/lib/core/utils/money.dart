@@ -13,4 +13,14 @@ abstract class Money {
   static int toCentavos(double pesos) => (pesos * 100).round();
 
   static double toPesos(int centavos) => centavos / 100;
+
+  /// Parse free-form user input (e.g. "125", "125.5", "₱1,250.00") into
+  /// centavos. Returns null when the text is not a valid non-negative amount.
+  static int? parsePesos(String input) {
+    final cleaned = input.replaceAll(RegExp(r'[^0-9.]'), '');
+    if (cleaned.isEmpty) return null;
+    final value = double.tryParse(cleaned);
+    if (value == null || value < 0) return null;
+    return toCentavos(value);
+  }
 }
